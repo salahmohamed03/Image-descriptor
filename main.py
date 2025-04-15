@@ -3,11 +3,16 @@ from PyQt6.QtWidgets import QApplication
 from MainWindowUI import MainWindowUI
 import asyncio
 from qasync import QEventLoop
+from CornerDetection import CornerDetection
+from SIFT import SIFTProcessor
+from Matching import MatchingProcessor
 
 
 async def main():
     # Initialize classes
-
+    CornerDetection()
+    SIFTProcessor()
+    MatchingProcessor()
     ###
     
     app = QApplication(sys.argv)

@@ -28,8 +28,7 @@ class MainWindowUI(QMainWindow):
         self.corner_image = None
         self.matching_image1 = None
         self.matching_image2 = None
-        self.sift_image1 = None
-        self.sift_image2 = None
+        self.sift_image = None
         
         # Setup button connections
         self.setup_connections()
@@ -48,8 +47,7 @@ class MainWindowUI(QMainWindow):
         self.ui.MatchingApplyBtn.clicked.connect(self.apply_matching)
         
         # SIFT tab connections
-        self.ui.SiftLoad1Btn.clicked.connect(self.load_sift_image1)
-        self.ui.SiftLoad2Btn.clicked.connect(self.load_sift_image2)
+        self.ui.SiftLoadBtn.clicked.connect(self.load_sift_image)
         self.ui.SiftApplyBtn.clicked.connect(self.apply_sift)
     
     def setup_subscriptions(self):
@@ -128,33 +126,23 @@ class MainWindowUI(QMainWindow):
         self.ui.MatchingTime.display(computation_time)
     
     # SIFT methods
-    def load_sift_image1(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Open Image 1", "", "Image Files (*.png *.jpg *.bmp)")
+    def load_sift_image(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
         if file_path:
             try:
-                self.sift_image1 = cv2.imread(file_path)
-                self.display_image(self.sift_image1, self.ui.SiftImage)
-                pub.sendMessage(Topics.LOAD_SIFT_IMAGE1, image_path=file_path, image=self.sift_image1)
-                logging.info(f"Loaded SIFT image 1: {file_path}")
+                self.sift_image = cv2.imread(file_path)
+                self.display_image(self.sift_image, self.ui.SiftImage)
+                # pub.sendMessage(Topics.LOAD_SIFT_IMAGE1, image_path=file_path, image=self.sift_image1)
+                # logging.info(f"Loaded SIFT image 1: {file_path}")
             except Exception as e:
                 logging.error(f"Error loading SIFT image 1: {str(e)}")
-    
-    def load_sift_image2(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Open Image 2", "", "Image Files (*.png *.jpg *.bmp)")
-        if file_path:
-            try:
-                self.sift_image2 = cv2.imread(file_path)
-                pub.sendMessage(Topics.LOAD_SIFT_IMAGE2, image_path=file_path, image=self.sift_image2)
-                logging.info(f"Loaded SIFT image 2: {file_path}")
-            except Exception as e:
-                logging.error(f"Error loading SIFT image 2: {str(e)}")
+
     
     def apply_sift(self):
-        if self.sift_image1 is not None and self.sift_image2 is not None:
+        if self.sift_image is not None :
             pub.sendMessage(
                 Topics.APPLY_SIFT,
-                image1=self.sift_image1,
-                image2=self.sift_image2
+                image=self.sift_image,
             )
             logging.info("Applied SIFT")
     

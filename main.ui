@@ -975,7 +975,7 @@ TalkingUI &gt; QFrame {
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="CornerDetectionTab">
        <attribute name="title">
@@ -1067,7 +1067,7 @@ TalkingUI &gt; QFrame {
             <widget class="QDoubleSpinBox" name="CornerThresholdSpinBox">
              <property name="minimumSize">
               <size>
-               <width>120</width>
+               <width>74</width>
                <height>33</height>
               </size>
              </property>
@@ -1113,7 +1113,7 @@ TalkingUI &gt; QFrame {
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QWidget" name="" native="true">
+         <widget class="QWidget" name="widget" native="true">
           <property name="maximumSize">
            <size>
             <width>16777215</width>
@@ -1280,16 +1280,9 @@ TalkingUI &gt; QFrame {
             <number>0</number>
            </property>
            <item>
-            <widget class="QPushButton" name="SiftLoad1Btn">
+            <widget class="QPushButton" name="SiftLoadBtn">
              <property name="text">
-              <string>Load Image1</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="SiftLoad2Btn">
-             <property name="text">
-              <string>Load Image2</string>
+              <string>Load Image</string>
              </property>
             </widget>
            </item>

@@ -54,8 +54,7 @@ MATCHING_COMPLETE:
 SIFT:
 ----
 APPLY_SIFT:
-    image1: numpy.ndarray - First image for SIFT feature matching
-    image2: numpy.ndarray - Second image for SIFT feature matching
+    image: numpy.ndarray -  image for SIFT feature generation
 
 SIFT_COMPLETE:
     result_image: numpy.ndarray - Processed image with SIFT matches
