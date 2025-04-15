@@ -1,0 +1,1350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1275</width>
+    <height>986</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">/*
+ * Mumble Dark Theme
+ * https://github.com/mumble-voip/mumble-theme
+ *
+ * Based on MetroMumble Theme by xPoke
+ * https://github.com/xPoke
+ *
+ * Originally forked from Flat Mumble Theme by xPaw (xpaw.ru)
+ *
+ * Licensed under The Do What The Fuck You Want To Public License (WTFPL)
+ */
+/*
+ * YOU SHOULD NOT MODIFY THIS FILE
+ * Edit the files in the &quot;source&quot; folder instead.
+ * See project README
+ *
+ */
+ApplicationPalette {
+  qproperty-window: #2e2e2e;
+  qproperty-windowtext: #eee;
+  qproperty-windowtext_disabled: #484848;
+  qproperty-base: #191919;
+  qproperty-alternatebase: #2d2d2d;
+  qproperty-text: #d8d8d8;
+  qproperty-text_disabled: #484848;
+  qproperty-tooltipbase: #191919;
+  qproperty-tooltiptext: #d8d8d8;
+  qproperty-tooltiptext_disabled: #484848;
+  qproperty-brighttext: #FFF;
+  qproperty-brighttext_disabled: #484848;
+  qproperty-highlight: #298ce1;
+  qproperty-highlightedtext: #FFF;
+  qproperty-highlightedtext_disabled: #484848;
+  qproperty-button: #444;
+  qproperty-buttontext: #d8d8d8;
+  qproperty-buttontext_disabled: #484848;
+  qproperty-link: #39a5dd;
+  qproperty-linkvisited: #39a5dd;
+  qproperty-light: #1c1c1c;
+  qproperty-midlight: transparent;
+  qproperty-mid: #1c1c1c;
+  qproperty-dark: transparent;
+  qproperty-shadow: #1c1c1c;
+}
+
+QObject,
+QObject::separator,
+QObject::handle,
+QObject::tab-bar,
+QObject::tab,
+QObject::section {
+  font-family: &quot;Segoe UI&quot;, Frutiger, &quot;Frutiger Linotype&quot;, &quot;Dejavu Sans&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
+  font-size: 10pt;
+  margin: 0;
+  padding: 0;
+  outline: 0;
+  border: 0;
+  selection-background-color: #298ce1;
+  selection-color: #FFF;
+  alternate-background-color: transparent;
+  color: #eee;
+  border-radius: 2px;
+}
+
+QMainWindow,
+QDockWidget {
+  background-color: #2e2e2e;
+}
+
+QDialog,
+QWizard *,
+QCalendarWidget *,
+#qswPages &gt; QObject {
+  background-color: #1D1D1D;
+  color: #d8d8d8;
+}
+
+QObject:disabled,
+QObject::item:disabled {
+  color: #484848;
+}
+
+a {
+  color: #39a5dd;
+  text-decoration: none;
+}
+
+QObject::separator {
+  height: 4px;
+  width: 4px;
+}
+
+QObject::separator:hover {
+  background: #333;
+}
+
+DockTitleBar {
+  font-size: 7pt;
+}
+
+QToolTip,
+QWhatsThis {
+  font-size: 8pt;
+  min-height: 1.3em;
+  border: 1px solid #888;
+  border-radius: 0;
+  background-color: #191919;
+  color: #d8d8d8;
+}
+
+QTextBrowser,
+QTextEdit {
+  background-color: #191919;
+  color: #d8d8d8;
+  border: 1px solid #1c1c1c;
+}
+
+QToolBar {
+  background-color: #2e2e2e;
+  spacing: 0;
+  padding: 2px;
+}
+
+QToolButton {
+  border: 1px solid transparent;
+  border-radius: 2px;
+  padding: 1px;
+  margin: 1px;
+}
+
+QToolButton:on {
+  background-color: #444;
+  border: 1px solid #444;
+}
+
+QToolButton:hover {
+  background-color: #3e4f5e;
+  border: 1px solid #3e4f5e;
+}
+
+QToolButton:pressed {
+  background-color: #484848;
+}
+
+QToolBar::separator {
+  background: #555;
+  height: 1px;
+  margin: 4px;
+  width: 1px;
+}
+
+QToolBar::separator:hover {
+  background: #555;
+  border: 0;
+}
+
+
+QMenuBar::item {
+  background-color: transparent;
+  padding: 4px 12px;
+}
+
+QMenuBar::item:selected {
+  background: #298ce1;
+  color: #FFF;
+}
+
+QMenuBar::item:pressed {
+  background: #1979ca;
+  color: #FFF;
+}
+
+QMenu {
+  background: #2b2b2b;
+  border: 1px solid #1c1c1c;
+  color: #d8d8d8;
+}
+
+QMenu::item {
+  border: 1px solid transparent;
+  color: #d8d8d8;
+  padding: 5px 16px;
+  padding-left: 25px;
+  border-radius: 2px;
+}
+
+QMenu::item:selected {
+  background: #3e4f5e;
+  border: 1px solid #3e4f5e;
+}
+
+QMenu::item:disabled {
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+QMenu::separator {
+  background: #555;
+  height: 1px;
+}
+
+QMenu::indicator {
+  padding-top: 2px;
+  height: 25px;
+  width: 25px;
+}
+
+QPushButton {
+  background-color: #444;
+  border: 1px solid #444;
+  color: #d8d8d8;
+  font-size: 12pt;
+  padding: 3px 20px;
+}
+
+QPushButton:focus {
+  background-color: #3e4f5e;
+}
+
+QPushButton:hover {
+  background-color: #595959;
+  border-color: #555;
+}
+
+QPushButton:hover:focus {
+  background-color: #485d6f;
+  border-color: #485d6f;
+}
+
+QPushButton:focus {
+  border-color: #3e4f5e;
+}
+
+QPushButton:pressed,
+QPushButton:pressed:focus {
+  background-color: #298ce1;
+  border-color: #298ce1;
+  color: #FFF;
+}
+
+QGroupBox,
+#qwMacWarning,
+#qwInlineNotice {
+  background-color: #2d2d2d;
+  border: 1px solid #1c1c1c;
+  color: #d8d8d8;
+  font-size: 13pt;
+  padding: 4px;
+  padding-top: 1em;
+}
+
+QGroupBox::title {
+  background-color: transparent;
+  margin: 6px;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+QListView {
+  background-color: #191919;
+  border: 1px solid #1c1c1c;
+}
+
+QListView::item {
+  border-radius: 2px;
+  border: 1px solid transparent;
+  color: #d8d8d8;
+  selection-color: #d8d8d8;
+  padding: 2px 4px;
+}
+
+QListView::item:hover {
+  background-color: #333;
+  border: 1px solid #333;
+}
+
+QListView::item:selected {
+  background-color: #3b3b3b;
+  border: 1px solid #3b3b3b;
+}
+
+QListView::item:selected:active {
+  background-color: #3e4f5e;
+  border: 1px solid #3e4f5e;
+}
+
+QTreeView {
+  background-color: #191919;
+  color: #d8d8d8;
+  selection-background-color: #191919;
+  selection-color: #d8d8d8;
+  border: 1px solid #1c1c1c;
+}
+
+QTreeView::item {
+  min-width: 60px;
+  border: 1px solid transparent;
+  border-left: 0;
+  border-right: 0;
+  color: #d8d8d8;
+  padding: 2px 4px;
+  selection-color: #d8d8d8;
+  border-radius: 0;
+}
+
+QTreeView::item:first,
+QTreeView::item:only-one {
+  border-left: 1px solid transparent;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+QTreeView::item:last,
+QTreeView::item:only-one {
+  border-right: 1px solid transparent;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+QTreeView::item:hover,
+QTreeView::item:focus {
+  background-color: #333;
+  border-color: #333;
+}
+
+QTreeView::item:selected {
+  background-color: #3b3b3b;
+  border: 1px solid #3b3b3b;
+  border-right: 0;
+  border-left: 0;
+}
+
+QTreeView::item:selected:first,
+QTreeView::item:selected:only-one {
+  border-left: 1px solid #3b3b3b;
+}
+
+QTreeView::item:selected:last,
+QTreeView::item:selected:only-one {
+  border-right: 1px solid #3b3b3b;
+}
+
+QTreeView::item:selected:active {
+  background-color: #3e4f5e;
+  border: 1px solid #3e4f5e;
+  border-right: 0;
+  border-left: 0;
+}
+
+QTreeView::item:selected:active:first,
+QTreeView::item:selected:active:only-one {
+  border-left: 1px solid #3e4f5e;
+}
+
+QTreeView::item:selected:active:last,
+QTreeView::item:selected:active:only-one {
+  border-right: 1px solid #3e4f5e;
+}
+
+QTreeView::branch {
+  border-image: none;
+  image: none;
+  margin-left: 3px;
+  margin-top: 1px;
+  padding-left: 3px;
+}
+
+
+
+QHeaderView {
+  border-bottom: 1px solid #1c1c1c;
+  border-radius: 0;
+}
+
+QHeaderView::section {
+  border: 0;
+  background-color: #2d2d2d;
+  color: #d8d8d8;
+  padding: 4px;
+  padding-left: 8px;
+  padding-right: 20px;
+  border-radius: 0;
+}
+
+
+
+
+
+QTabWidget::pane {
+  background-color: #2d2d2d;
+  border: 1px solid #1c1c1c;
+}
+
+QTabWidget::pane:top {
+  margin-top: -1px;
+  border-radius: 2px;
+  border-top-left-radius: 0;
+}
+
+QTabWidget::pane:bottom {
+  margin-bottom: -1px;
+  border-radius: 2px;
+  border-bottom-left-radius: 0;
+}
+
+QTabWidget::tab-bar {
+  background-color: #1D1D1D;
+}
+
+QTabBar::tab {
+  color: #ccc;
+  background-color: #1e1e1e;
+  padding: 6px 16px;
+  border-radius: 0;
+  border: 1px solid #1c1c1c;
+  border-right: 0;
+}
+
+QTabBar::tab:last,
+QTabBar::tab:only-one {
+  border-right: 1px solid #1c1c1c;
+}
+
+QTabBar::tab:hover {
+  background-color: #3e4f5e;
+}
+
+QTabBar::tab:disabled {
+  color: #484848;
+}
+
+QTabBar::tab:selected {
+  color: #d8d8d8;
+  background-color: #2d2d2d;
+}
+
+QTabBar::tab:top {
+  border-bottom: 0;
+  margin-bottom: 1px;
+}
+
+QTabBar::tab:bottom {
+  border-top: 0;
+  margin-top: 1px;
+}
+
+QTabBar::tab:top:selected {
+  padding-bottom: 7px;
+  margin-bottom: 0;
+}
+
+QTabBar::tab:bottom:selected {
+  padding-top: 7px;
+  margin-top: 0;
+}
+
+QTabBar::tab:top:first,
+QTabBar::tab:top:only-one {
+  border-top-left-radius: 2px;
+}
+
+QTabBar::tab:top:last,
+QTabBar::tab:top:only-one {
+  border-top-right-radius: 2px;
+}
+
+QTabBar::tab:bottom:first,
+QTabBar::tab:bottom:only-one {
+  border-bottom-left-radius: 2px;
+}
+
+QTabBar::tab:bottom:last,
+QTabBar::tab:bottom:only-one {
+  border-bottom-right-radius: 2px;
+}
+
+QScrollBar {
+  border-radius: 0;
+  font-size: 10pt;
+}
+
+QScrollBar:vertical {
+  border-left: 1px solid #1c1c1c;
+  width: 1em;
+}
+
+QScrollBar:horizontal {
+  border-top: 1px solid #1c1c1c;
+  height: 1em;
+}
+
+QScrollBar::handle {
+  margin: -1px;
+  background: #666;
+  border: 1px solid #1c1c1c;
+}
+
+QScrollBar::handle:vertical {
+  min-height: 10px;
+}
+
+QScrollBar::handle:horizontal {
+  min-width: 10px;
+}
+
+QScrollBar::handle:hover {
+  background: #888;
+}
+
+
+
+QAbstractScrollArea::corner {
+  border-left: 1px solid #1c1c1c;
+  border-top: 1px solid #1c1c1c;
+  height: 0;
+  width: 0;
+  border-radius: 0;
+  border-top: 1px solid #1c1c1c;
+  border-left: 1px solid #1c1c1c;
+  background: #191919;
+}
+
+QLineEdit,
+QComboBox,
+QSpinBox,
+QAbstractSpinBox {
+  color: #d8d8d8;
+  padding: 4px;
+  min-height: 1em;
+}
+
+QComboBox,
+QSpinBox,
+QAbstractSpinBox {
+  border: 1px solid #444;
+  background-color: #444;
+}
+
+QLineEdit,
+QTextEdit,
+QPlainTextEdit,
+QSpinBox,
+QAbstractSpinBox,
+QComboBox:editable {
+  border: 1px solid #2e2e2e;
+  background-color: #191919;
+}
+
+QSpinBox,
+QAbstractSpinBox {
+  min-width: 2.5em;
+  padding-right: 10px;
+}
+
+QPushButton:disabled,
+QLineEdit:disabled,
+QTextEdit:disabled,
+QPlainTextEdit:disabled,
+QListWidget:disabled,
+QTreeWidget:disabled,
+QComboBox:disabled,
+QSpinBox:disabled,
+QAbstractSpinBox:disabled {
+  border: 1px solid transparent;
+  background-color: #282828;
+}
+
+
+
+
+
+QToolButton[popupMode=&quot;1&quot;],
+QToolButton[popupMode=&quot;2&quot;],
+QPushButton[popupMode=&quot;1&quot;],
+QPushButton[popupMode=&quot;2&quot;] {
+  padding-right: 14px;
+}
+
+
+
+
+QComboBox QAbstractItemView {
+  background-color: #191919;
+  border: 1px solid #1c1c1c;
+  color: #d8d8d8;
+  border-radius: 0;
+}
+
+QLabel,
+QCheckBox,
+QAbstractCheckBox,
+QTreeView::indicator,
+QRadioButton {
+  color: #d8d8d8;
+  background: transparent;
+}
+
+QCheckBox::indicator,
+QTreeView::indicator {
+  background-color: #444;
+  border: 1px solid #444;
+  height: 13px;
+  width: 13px;
+  margin-top: 1px;
+}
+
+QMenu::indicator {
+  width: 12px;
+  left: 6px;
+}
+
+
+
+QCheckBox::indicator:disabled,
+QTreeView::indicator:disabled {
+  border: 1px solid #2d2d2d;
+  background-color: #282828;
+}
+
+
+QRadioButton::indicator {
+  background: #444;
+  border: 1px solid #444;
+  border-radius: 7px;
+  height: 12px;
+  width: 12px;
+}
+
+QTreeView::indicator {
+  background: #444;
+}
+
+QRadioButton::indicator:disabled {
+  background-color: #282828;
+  margin: 1px;
+  border: 1px solid transparent;
+}
+
+
+QSlider::groove {
+  background: #393939;
+  border: 1px solid #393939;
+  border-radius: 2px;
+  font-size: 3pt;
+}
+
+QSlider::groove:horizontal {
+  height: 0.8em;
+}
+
+QSlider::groove:vertical {
+  width: 0.8em;
+}
+
+QSlider::groove:disabled,
+QSlider::sub-page:disabled {
+  background: #282828;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+
+QSlider::sub-page {
+  background: #486d8d;
+  border: 1px solid #486d8d;
+  border-radius: 2px;
+}
+
+QSlider::handle {
+  background: #777;
+  border: 1px solid #222;
+  border-radius: 3px;
+  font-size: 4pt;
+}
+
+QSlider::handle:horizontal {
+  margin: -5px -1px;
+  width: 4.5em;
+}
+
+QSlider::handle:vertical {
+  margin: -1px -5px;
+  height: 4.5em;
+}
+
+QSlider::handle:focus {
+  background-color: #6d96ba;
+  border-color: #226;
+}
+
+QSlider::handle:hover {
+  background-color: #999;
+}
+
+QSlider::handle:pressed {
+  background-color: #bbb;
+  border-color: #222;
+}
+
+QSlider::handle:disabled {
+  background-color: #282828;
+  border: 1px solid #282828;
+}
+
+QCheckBox::indicator:focus,
+QTreeView::indicator:focus,
+QRadioButton::indicator:focus,
+QComboBox:focus {
+  background-color: #3e4f5e;
+}
+
+QCheckBox::indicator:focus:hover,
+QTreeView::indicator:focus:hover,
+QRadioButton::indicator:focus:hover,
+QComboBox:focus:hover {
+  background-color: #485d6f;
+  border-color: #485d6f;
+}
+
+QCheckBox::indicator:hover,
+QTreeView::indicator:hover,
+QRadioButton::indicator:hover,
+QComboBox:hover {
+  background-color: #595959;
+  border-color: #555;
+}
+
+QLineEdit:focus,
+QSpinBox:focus,
+QAbstractSpinBox:focus,
+QComboBox:editable:focus {
+  background-color: #191919;
+}
+
+QLineEdit:focus:hover,
+QSpinBox:focus:hover,
+QAbstractSpinBox:focus:hover,
+QComboBox:editable:focus:hover {
+  border-color: #485d6f;
+}
+
+QLineEdit:hover,
+QSpinBox:hover,
+QAbstractSpinBox:hover,
+QComboBox:editable:hover {
+  background-color: #191919;
+  border-color: #555;
+}
+
+QCheckBox::indicator:focus,
+QTreeView::indicator:focus,
+QRadioButton::indicator:focus,
+QComboBox:focus,
+QLineEdit:focus,
+QTextEdit:focus,
+QPlainTextEdit:focus,
+QSpinBox:focus,
+QAbstractSpinBox:focus,
+QComboBox:editable:focus {
+  border-color: #3e4f5e;
+}
+
+QFontDialog {
+  min-width: 32em;
+  min-height: 24em;
+}
+
+QColorDialog QColorLuminancePicker {
+  background-color: transparent;
+}
+
+QMessageBox,
+QDialogButtonBox {
+  dialogbuttonbox-buttons-have-icons: 0;
+}
+
+/* Mumble Specifics */
+LogTextBrowser,
+#qdsChat {
+  margin: 0 2px;
+  min-height: 120px;
+  min-width: 40px;
+  border-color: #1c1c1c;
+}
+
+UserView {
+  margin: 0 2px;
+  min-height: 120px;
+  min-width: 40px;
+}
+
+UserView::item {
+  padding: 0;
+  padding-top: -1px;
+}
+
+#qdwChat &gt; QTextEdit {
+  padding: -2px;
+  margin: 0 2px;
+  margin-bottom: 2px;
+  font-size: 10pt;
+}
+
+#qtIconToolbar QComboBox {
+  font-size: 8pt;
+}
+
+.log-time {
+  background-color: transparent;
+  color: #95a5a6;
+  font-size: 9pt;
+}
+
+.log-server {
+  background-color: transparent;
+  color: #F9655D;
+  font-weight: bold;
+}
+
+.log-channel {
+  background-color: transparent;
+  color: #e67e22;
+  font-weight: bold;
+}
+
+.log-privilege {
+  background-color: transparent;
+  color: #c0392b;
+  font-weight: bold;
+}
+
+.log-target {
+  background-color: transparent;
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.log-source {
+  background-color: transparent;
+  color: #27ae60;
+  font-weight: bold;
+}
+
+QListView#qlwIcons {
+  padding: 0;
+  background-color: transparent;
+  border: 0;
+  font-size: 12pt;
+  min-width: 165%;
+  margin-left: 4px;
+  margin-top: 12px;
+}
+
+QListView#qlwIcons::item {
+  margin-bottom: 1px;
+  padding: 5px 7px;
+}
+
+QListView#qlwIcons::item:hover {
+  border-color: #333;
+  background-color: #333;
+}
+
+QListView#qlwIcons::item:selected {
+  background-color: #444;
+  border: 1px solid #444;
+}
+
+QListView#qlwIcons::item:focus {
+  background-color: #3e4f5e;
+  border: 1px solid #3e4f5e;
+}
+
+QSlider {
+  margin-left: 30px;
+  margin-right: 30px;
+}
+
+#qswPages &gt; * &gt; * &gt; QScrollBar {
+  margin: 0;
+}
+
+#qswPages &gt; * &gt; QWidget {
+  margin: 2px;
+}
+
+QListView::item QListWidgetItem,
+QListView::item QLineEdit,
+QTreeView::item QComboBox,
+QTreeView::item QLineEdit {
+  background: #444;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+  font-size: 9pt;
+}
+
+QListView::item QListWidgetItem:hover,
+QListView::item QLineEdit:hover,
+QTreeView::item QComboBox:hover,
+QTreeView::item QLineEdit:hover {
+  background: #444;
+}
+
+AboutDialog &gt; QTextBrowser,
+AboutDialog QTextEdit {
+  border: 0;
+}
+
+#qtbToolBar {
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+#BanEditor {
+  min-width: 600px;
+}
+
+#GlobalShortcutTarget {
+  min-height: 600px;
+}
+
+ViewCert {
+  min-height: 600px;
+}
+
+TalkingUI {
+  background-color: #191919;
+}
+
+TalkingUI &gt; * {
+  background-color: #191919;
+}
+
+TalkingUI [selected=&quot;false&quot;] {
+  background-color: #191919;
+}
+
+TalkingUI [selected=&quot;false&quot;]:hover {
+  background-color: #333;
+}
+
+TalkingUI [selected=&quot;true&quot;] {
+  background-color: #3e4f5e;
+  border: 1px solid #3e4f5e;
+}
+
+TalkingUI &gt; QFrame {
+  border: 1px solid;
+  border-color: #1c1c1c;
+  border-radius: 2px;
+}
+
+</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_4">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="CornerDetectionTab">
+       <attribute name="title">
+        <string>Corner Detection</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QWidget" name="widget_3" native="true">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>60</height>
+           </size>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <item>
+            <widget class="QPushButton" name="LoadCornerBtn">
+             <property name="text">
+              <string>Load Image</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="ApplyCornerBtn">
+             <property name="text">
+              <string>Apply</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QFrame" name="frame_2">
+          <layout class="QHBoxLayout" name="horizontalLayout_11">
+           <item>
+            <widget class="QLabel" name="CornerImage">
+             <property name="text">
+              <string>Image</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="CornerOutput">
+             <property name="text">
+              <string>Output</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget_2" native="true">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>50</height>
+           </size>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <item>
+            <widget class="QComboBox" name="CornerCombo">
+             <property name="minimumSize">
+              <size>
+               <width>120</width>
+               <height>33</height>
+              </size>
+             </property>
+             <item>
+              <property name="text">
+               <string>Harris</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Lambda-</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="CornerThresholdSpinBox">
+             <property name="minimumSize">
+              <size>
+               <width>120</width>
+               <height>33</height>
+              </size>
+             </property>
+             <property name="maximum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.000010000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>Computation time:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLCDNumber" name="CornerTime"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="MatchingTab">
+       <attribute name="title">
+        <string>Matching</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QWidget" name="" native="true">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>60</height>
+           </size>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <property name="spacing">
+            <number>7</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QPushButton" name="MatchingLoad1Btn">
+             <property name="text">
+              <string>Load Image1</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="MatchingLoad2Btn">
+             <property name="text">
+              <string>Load Image2</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="MatchingApplyBtn">
+             <property name="text">
+              <string>Apply</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QFrame" name="frame">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="MatchingImage1">
+             <property name="text">
+              <string>Image1</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="MatchingImage2">
+             <property name="text">
+              <string>Image2</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="MatchingOutPut">
+          <property name="text">
+           <string>Output</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget" native="true">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>50</height>
+           </size>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QComboBox" name="MatchingCombo">
+             <property name="minimumSize">
+              <size>
+               <width>120</width>
+               <height>33</height>
+              </size>
+             </property>
+             <item>
+              <property name="text">
+               <string>NCC</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>SSD</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Computation time:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLCDNumber" name="MatchingTime"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="SiftTap">
+       <attribute name="title">
+        <string>SIFT</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QWidget" name="widget_4" native="true">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>60</height>
+           </size>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_12">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QPushButton" name="SiftLoad1Btn">
+             <property name="text">
+              <string>Load Image1</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="SiftLoad2Btn">
+             <property name="text">
+              <string>Load Image2</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="SiftApplyBtn">
+             <property name="text">
+              <string>Apply</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="SiftImage">
+            <property name="text">
+             <string>Image</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="SiftOutput">
+            <property name="text">
+             <string>Output</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1275</width>
+     <height>32</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
