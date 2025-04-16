@@ -10,9 +10,9 @@ from Matching import MatchingProcessor
 
 async def main():
     # Initialize classes
-    CornerDetection()
-    SIFTProcessor()
-    MatchingProcessor()
+    corner = CornerDetection()
+    sift =  SIFTProcessor()
+    match = MatchingProcessor()
     ###
     
     app = QApplication(sys.argv)
