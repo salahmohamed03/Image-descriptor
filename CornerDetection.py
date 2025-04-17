@@ -69,12 +69,12 @@ class CornerDetection:
 
         return Sx2, Sy2, Sxy
 
-    def _identify_and_draw_corners(self, R, image, threshold):
+    def _identify_and_draw_corners(self, R, image, threshold,color):
         # Normalize R for consistent thresholding
         R = (R - R.min()) / (R.max() - R.min() + 1e-6)
 
         # Thresholding and non-maximum suppression
-        window_size = 5  # Smaller window for less aggressive suppression
+        window_size = 6# Smaller window for less aggressive suppression
         threshold = threshold if threshold else 0.05  # Default threshold
         corners = []
 
@@ -88,12 +88,12 @@ class CornerDetection:
 
         # Sort corners by response and limit number
         corners = sorted(corners, key=lambda x: x[2], reverse=True)
-        max_corners = 50  # Maximum number of corners
+        max_corners = 80  # Maximum number of corners
         corners = corners[:max_corners]
 
         # Draw corners on the original RGB image
         for x, y, _ in corners:
-            cv2.circle(image, (x, y), radius=4, color=(0, 0, 255), thickness=-1)
+            cv2.circle(image, (x, y), radius=4, color=color, thickness=-1)
 
         return image
 
@@ -108,7 +108,7 @@ class CornerDetection:
         R = det_M - k * (trace_M ** 2)
 
         # Identify corners and draw them
-        return self._identify_and_draw_corners(R, image, threshold if threshold else 0.05)
+        return self._identify_and_draw_corners(R, image, threshold if threshold else 0.05,(0,0,255))
 
     def _lambda_corner_detection(self, image, threshold):
         # Compute structure tensor components
@@ -123,4 +123,4 @@ class CornerDetection:
                 R[y, x] = np.min(eigenvalues)
 
         # Identify corners and draw them (slightly higher default threshold)
-        return self._identify_and_draw_corners(R, image, threshold if threshold else 0.1)
+        return self._identify_and_draw_corners(R, image, threshold if threshold else 0.1,(255,0,0))
