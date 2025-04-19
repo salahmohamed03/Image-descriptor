@@ -8,7 +8,6 @@ import numpy as np
 from numba import njit
 from collections import namedtuple
 
-# Define a simple structure for keypoints that Numba can handle
 Keypoint = namedtuple('Keypoint', ['x', 'y', 'octave', 'scale', 'value'])
 
 class SIFTProcessor:
@@ -333,3 +332,8 @@ class SIFTProcessor:
             })
             
         return descriptors
+    
+
+    def getDescriptor(self, image):
+        result = self.calculate_sift(image)
+        return (result['Keypoint'],  result['descriptors'])
