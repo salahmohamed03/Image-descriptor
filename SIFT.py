@@ -14,7 +14,7 @@ Keypoint = namedtuple('Keypoint', ['x', 'y', 'octave', 'scale', 'value'])
 class SIFTProcessor:
     def __init__(self):
         self.NUM_OCTAVES = 4
-        self.NUM_SCALES = 5
+        self.NUM_SCALES = 4
         self.INITIAL_SIGMA = 1.6
         self.NUM_BINS = 8
         self.NUM_REGIONS = 4
@@ -31,9 +31,9 @@ class SIFTProcessor:
     def on_apply_sift(self, image):
         executor = concurrent.futures.ThreadPoolExecutor()
         loop = asyncio.get_event_loop()
-        loop.run_in_executor(executor, self.process_image, image)
+        loop.run_in_executor(executor, self.apply, image)
     
-    def process_image(self, image):
+    def apply(self, image):
         print("SIFT STARTED")
         start = time.time()
         
@@ -42,12 +42,10 @@ class SIFTProcessor:
         
         computation_time = time.time() - start
         
-        # Modified to match the expected message signature
         pub.sendMessage(
             Topics.SIFT_COMPLETE,
             result_image=result_image,
             computation_time=computation_time
-            # Removed keypoints_count as it wasn't expected by the subscriber
         )
 
     def calculate_sift(self, image):
@@ -63,7 +61,6 @@ class SIFTProcessor:
         keypoints, DOG_pyramids = self.scale_space_extrema_detection(scale_space)
         print(f"Keypoint Detection Done - {len(keypoints)} keypoints")
 
-        # Convert Keypoint namedtuples to dictionaries for the rest of the processing
         keypoint_dicts = [{'x': kp.x, 'y': kp.y, 'octave': kp.octave, 
                           'scale': kp.scale, 'value': kp.value} for kp in keypoints]
         
@@ -92,7 +89,8 @@ class SIFTProcessor:
             x, y = int(round(kp['x'])), int(round(kp['y']))
             
             if 0 <= x < image.shape[1] and 0 <= y < image.shape[0]:
-                cv2.circle(image, (x, y), 3, (0, 255, 0), -1)
+                # Draw white circle for keypoint (BGR color: 255,255,255)
+                cv2.circle(image, (x, y), 3, (255, 255, 255), -1)
                 
                 if (x, y) in orientation_map:
                     ori = orientation_map[(x, y)]
