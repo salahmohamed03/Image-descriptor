@@ -13,7 +13,7 @@ async def main():
     corner = CornerDetection()
     sift =  SIFTProcessor()
     match = MatchingProcessor()
-    ###
+    ### 
     
     app = QApplication(sys.argv)
     loop = QEventLoop(app)

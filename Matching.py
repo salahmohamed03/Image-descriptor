@@ -13,7 +13,7 @@ from SIFT import SIFTProcessor
 class MatchingProcessor:
     def __init__(self):
         self.setup_subscriptions()
-        self.sift_processor = SIFTProcessor()
+        self.sift_processor = SIFTProcessor()   
         logging.info("Matching processor initialized")
     
     def setup_subscriptions(self):
@@ -69,8 +69,8 @@ class MatchingProcessor:
         
         matches = sorted(matches, key=lambda x: x[2]) # soring based on the third element which is distance  
         
-        num_matches = min(10, len(matches))
-        best_matches = matches[:num_matches]
+        num_matches = min(10    , len(matches))
+        best_matches = matches[:num_matches]    
         
         result_image = self.draw_matches(image1, image2, keypoints1, keypoints2, best_matches)
         
@@ -171,6 +171,7 @@ class MatchingProcessor:
             cv2.circle(out_img, (x1, y1), 4, (0, 255, 0), 1)
             cv2.circle(out_img, (x2 + cols1, y2), 4, (0, 255, 0), 1)
 
-            cv2.line(out_img, (x1, y1), (x2 + cols1, y2), (0, 255, 0), 1)
+            random_color = tuple(np.random.randint(0, 255, size=3).tolist())
+            cv2.line(out_img, (x1, y1), (x2 + cols1, y2), random_color, thickness= 3)
         
         return out_img
