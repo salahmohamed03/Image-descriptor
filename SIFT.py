@@ -7,21 +7,23 @@ import cv2
 import numpy as np
 from numba import njit
 from collections import namedtuple
+from math import exp, sqrt, pi
+from numpy.linalg import norm
+from sift_processor import _find_extrema_in_octave
+
 
 Keypoint = namedtuple('Keypoint', ['x', 'y', 'octave', 'scale', 'value'])
 
 class SIFTProcessor:
     def __init__(self):
-        self.NUM_OCTAVES = 8
-        self.NUM_SCALES = 10
+        self.NUM_OCTAVES = 4
+        self.NUM_SCALES = 5  # Need at least 3 scales per octave for DoG
         self.INITIAL_SIGMA = 1.6
-        self.NUM_BINS = 8
-        self.NUM_REGIONS = 4
-        self.REGION_SIZE = 4
-        self.WINDOW_SIZE = self.NUM_REGIONS * self.REGION_SIZE
+        self.NUM_BINS = 36  # For orientation assignment
+        self.CONTRAST_THRESHOLD = 0.04
+        self.EDGE_RATIO = 10.0
         self.SIGMA_MULTIPLIER = 1.5
         self.PEAK_RATIO = 0.8
-        self.CONTRAST_THRESHOLD = 0.04
         self.setup_subscriptions()
     
     def setup_subscriptions(self):
@@ -54,22 +56,24 @@ class SIFTProcessor:
             gray_image = image.copy().astype(np.float32)
             image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
 
-        edgy_image = self.detectEdges(gray_image)
-        gray_image = cv2.normalize(edgy_image, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-
-        scale_space = self.scale_space_construction(gray_image)
+        # Generate base image by doubling size and blurring
+        base_image = cv2.resize(gray_image, (0, 0), fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
+        base_image = cv2.GaussianBlur(base_image, (0, 0), sigmaX=sqrt(self.INITIAL_SIGMA**2 - 0.5**2))
+        
+        scale_space = self.scale_space_construction(base_image)
         print(f"Scale Space Construction Done - {len(scale_space)} octaves")
 
         keypoints, DOG_pyramids = self.scale_space_extrema_detection(scale_space)
         print(f"Keypoint Detection Done - {len(keypoints)} keypoints")
 
+        # Convert keypoints to list of dicts
         keypoint_dicts = [{'x': kp.x, 'y': kp.y, 'octave': kp.octave, 
-                          'scale': kp.scale, 'value': kp.value} for kp in keypoints]
+                         'scale': kp.scale, 'value': kp.value} for kp in keypoints]
         
-        dominant_orientations = self.orientation_assignment(gray_image, keypoint_dicts)
+        dominant_orientations = self.orientation_assignment(scale_space, keypoint_dicts)
         print(f"Orientation Assignment Done - {len(dominant_orientations)} orientations")
 
-        descriptors = self.build_descriptor(gray_image, keypoint_dicts, dominant_orientations)
+        descriptors = self.build_descriptor(scale_space, keypoint_dicts, dominant_orientations)
         print(f"Descriptor Building Done - {len(descriptors)} descriptors")
 
         self.draw_keypoints(image, keypoint_dicts, dominant_orientations)
@@ -87,283 +91,198 @@ class SIFTProcessor:
     def draw_keypoints(self, image, keypoints, orientations):
         for kp in keypoints:
             x, y = int(round(kp['x'])), int(round(kp['y']))
-            
-            # Draw a small white highlight circle (radius=3, thickness=-1 for filled)
-            if 0 <= x < image.shape[1] and 0 <= y < image.shape[0]:
-                cv2.circle(image, (x, y), 1, (255, 255, 255), -1)  # White filled circle
+            cv2.circle(image, (x, y), 3, (0, 255, 0), 1)
+            for orientation in orientations:
+                if orientation['x'] == kp['x'] and orientation['y'] == kp['y']:
+                    angle = orientation['orientation']
+                    length = 10
+                    end_x = int(x + length * np.cos(np.deg2rad(angle)))
+                    end_y = int(y + length * np.sin(np.deg2rad(angle)))
+                    cv2.line(image, (x, y), (end_x, end_y), (0, 0, 255), 1)
                 
     def scale_space_construction(self, image):
         scale_space = []
-        copy_image = image.copy()
-        k = np.sqrt(2)
-
+        k = 2 ** (1.0 / (self.NUM_SCALES - 3))  # Scale multiplicative factor
+        
+        # Generate Gaussian kernels for each scale
+        gaussian_kernels = [0] * self.NUM_SCALES
+        gaussian_kernels[0] = self.INITIAL_SIGMA
+        for s in range(1, self.NUM_SCALES):
+            sigma_prev = (k ** (s - 1)) * self.INITIAL_SIGMA
+            sigma_total = k * sigma_prev
+            gaussian_kernels[s] = sqrt(sigma_total ** 2 - sigma_prev ** 2)
+        
         for octave in range(self.NUM_OCTAVES):
-           octaves = []
-           sigma= self.INITIAL_SIGMA
-           for scale in range(self.NUM_SCALES):
-                current_sigma = sigma * (k ** scale)
-                blurred_image = cv2.GaussianBlur(copy_image, (0, 0), sigmaX=current_sigma)
-                octaves.append(blurred_image)
-           scale_space.append(octaves)
-           # Downgrade the image 
-           image = cv2.resize(image, (int(
-                image.shape[1] / 2), int(image.shape[0] / 2)), interpolation=cv2.INTER_NEAREST)
-    
+            octave_images = []
+            octave_images.append(image)  # First image in octave
+            
+            # Apply Gaussian blur for each scale
+            for s in range(1, self.NUM_SCALES):
+                image = cv2.GaussianBlur(image, (0, 0), sigmaX=gaussian_kernels[s])
+                octave_images.append(image)
+            
+            scale_space.append(octave_images)
+            
+            # Downsample the image for next octave
+            if octave < self.NUM_OCTAVES - 1:
+                image = cv2.resize(octave_images[-3], 
+                                 (int(image.shape[1]/2), int(image.shape[0]/2)), 
+                                 interpolation=cv2.INTER_NEAREST)
+        
         return scale_space
+        
+    def generate_DOG_Pyramid(self, scale_space):
+        DOG_pyramids = []
+        for octave in scale_space:
+            octave_DOG = []
+            for s in range(len(octave) - 1):
+                DOG = octave[s + 1] - octave[s]
+                octave_DOG.append(DOG)
+            DOG_pyramids.append(octave_DOG)
+        return DOG_pyramids
     
-
     def scale_space_extrema_detection(self, scale_space):
         keypoints = []
-        DOG_pyramids = []
+        DOG_pyramids = self.generate_DOG_Pyramid(scale_space)
         
-        # Build DOG Pyramid
-        for octave in range(len(scale_space)):
-            DOG_octave = []
-            for scale in range(len(scale_space[octave]) - 1):
-                DOG = scale_space[octave][scale + 1] - scale_space[octave][scale]
-                DOG_octave.append(DOG)
-            DOG_pyramids.append(DOG_octave)
-        
-        # Find Local Extrema with contrast threshold
-        for octave, DOG_octave in enumerate(DOG_pyramids):
-            for scale in range(1, len(DOG_octave) - 1):
-                current_DOG = DOG_octave[scale]
-                above_DOG = DOG_octave[scale + 1]
-                below_DOG = DOG_octave[scale - 1]
-                
-                octave_keypoints = self._find_extrema_in_octave(
-                    current_DOG, above_DOG, below_DOG, octave, scale
+        for octave_idx, dog_octave in enumerate(DOG_pyramids):
+            for s in range(1, len(dog_octave) - 1):
+                octave_keypoints = _find_extrema_in_octave(
+                    dog_octave[s],   # current
+                    dog_octave[s+1], # above 
+                    dog_octave[s-1], # below
+                    octave_idx, s,
+                    self.CONTRAST_THRESHOLD
                 )
                 keypoints.extend(octave_keypoints)
         
         return keypoints, DOG_pyramids
-    
-    @staticmethod
-    @njit
-    def _find_extrema_in_octave(current_DOG, above_DOG, below_DOG, octave, scale):
-        keypoints = []
-        height, width = current_DOG.shape
-        # Lower threshold to detect more keypoints
-        threshold = 0.05  # Reduced from 0.032 (0.8*0.04)
-        
-        for i in range(1, height - 1):
-            for j in range(1, width - 1):
-                current_val = current_DOG[i, j]
-                
-                # First check if the value is significant enough
-                if abs(current_val) < threshold:
-                    continue
-                    
-                is_max = True
-                is_min = True
-                
-                # Check current scale neighbors
-                for di in [-1, 0, 1]:
-                    for dj in [-1, 0, 1]:
-                        if di == 0 and dj == 0:
-                            continue
-                        
-                        neighbor = current_DOG[i + di, j + dj]
-                        if current_val <= neighbor:
-                            is_max = False
-                        if current_val >= neighbor:
-                            is_min = False
-                        if not is_max and not is_min:
-                            break
-                    if not is_max and not is_min:
-                        break
-                
-                # Only check other scales if we might have an extremum
-                if is_max or is_min:
-                    # Check scale above
-                    for di in [-1, 0, 1]:
-                        for dj in [-1, 0, 1]:
-                            neighbor = above_DOG[i + di, j + dj]
-                            if current_val <= neighbor:
-                                is_max = False
-                            if current_val >= neighbor:
-                                is_min = False
-                            if not is_max and not is_min:
-                                break
-                        if not is_max and not is_min:
-                            break
-                
-                if is_max or is_min:
-                    # Check scale below
-                    for di in [-1, 0, 1]:
-                        for dj in [-1, 0, 1]:
-                            neighbor = below_DOG[i + di, j + dj]
-                            if current_val <= neighbor:
-                                is_max = False
-                            if current_val >= neighbor:
-                                is_min = False
-                            if not is_max and not is_min:
-                                break
-                        if not is_max and not is_min:
-                            break
-                
-                if is_max or is_min:
-                    keypoints.append(Keypoint(
-                        x=j * (2 ** octave),
-                        y=i * (2 ** octave),
-                        octave=octave,
-                        scale=scale,
-                        value=current_val
-                    ))
-        
-        return keypoints
 
-    def orientation_assignment(self, image, keypoints):
+    def orientation_assignment(self, scale_space, keypoints):
         orientations = []
-        height, width = image.shape
         
         for kp in keypoints:
-            x, y = kp['x'], kp['y']
+            octave = kp['octave']
             scale = kp['scale']
-            sigma = self.SIGMA_MULTIPLIER * scale
+            x = int(round(kp['x'] / (2 ** octave)))
+            y = int(round(kp['y'] / (2 ** octave)))
             
-            window_size = int(6 * sigma)
-            window_size = min(window_size, min(height, width) // 2)
+            gaussian_image = scale_space[octave][scale]
+            height, width = gaussian_image.shape
             
-            y_start = max(0, int(y - window_size))
-            y_end = min(height, int(y + window_size + 1))
-            x_start = max(0, int(x - window_size))
-            x_end = min(width, int(x + window_size + 1))
-            
-            if y_end <= y_start or x_end <= x_start or (y_end - y_start) < 3 or (x_end - x_start) < 3:
+            if x < 1 or x >= width - 1 or y < 1 or y >= height - 1:
                 continue
                 
-            window = image[y_start:y_end, x_start:x_end]
-            dy = cv2.Sobel(window, cv2.CV_32F, 0, 1, ksize=3)
-            dx = cv2.Sobel(window, cv2.CV_32F, 1, 0, ksize=3)
+            # Calculate gradient magnitude and orientation
+            dx = gaussian_image[y, x+1] - gaussian_image[y, x-1]
+            dy = gaussian_image[y-1, x] - gaussian_image[y+1, x]
+            mag = sqrt(dx*dx + dy*dy)
+            ori = np.rad2deg(np.arctan2(dy, dx)) % 360
             
-            magnitudes = np.sqrt(dx**2 + dy**2)
-            orientations_deg = np.degrees(np.arctan2(dy, dx)) % 360
+            # Create orientation histogram
+            hist = np.zeros(self.NUM_BINS)
+            radius = int(round(3 * 1.5 * kp['scale']))
+            weight_factor = -0.5 / (1.5 * kp['scale']) ** 2
             
-            center_y, center_x = window.shape[0] // 2, window.shape[1] // 2
-            y_indices, x_indices = np.ogrid[:window.shape[0], :window.shape[1]]
-            dist_sq = ((y_indices - center_y)**2 + (x_indices - center_x)**2) / (2 * sigma**2)
-            gaussian_weights = np.exp(-dist_sq)
+            for i in range(-radius, radius + 1):
+                for j in range(-radius, radius + 1):
+                    if y + i < 1 or y + i >= height - 1 or x + j < 1 or x + j >= width - 1:
+                        continue
+                        
+                    dx = gaussian_image[y+i, x+j+1] - gaussian_image[y+i, x+j-1]
+                    dy = gaussian_image[y+i-1, x+j] - gaussian_image[y+i+1, x+j]
+                    mag = sqrt(dx*dx + dy*dy)
+                    ori = np.rad2deg(np.arctan2(dy, dx)) % 360
+                    weight = exp(weight_factor * (i*i + j*j))
+                    
+                    bin = int(round(ori * self.NUM_BINS / 360)) % self.NUM_BINS
+                    hist[bin] += weight * mag
             
-            weighted_mags = magnitudes * gaussian_weights
-            
-            bin_indices = (orientations_deg * self.NUM_BINS / 360).astype(int)
-            histogram = np.bincount(bin_indices.ravel(), weights=weighted_mags.ravel(), minlength=self.NUM_BINS)
-            
-            histogram = np.roll(histogram, 1) + histogram + np.roll(histogram, -1)
-            
-            max_peak = np.max(histogram)
-            peak_indices = np.where(histogram >= max_peak * self.PEAK_RATIO)[0]
-            
-            for peak_idx in peak_indices:
-                orientation = 360.0 * peak_idx / self.NUM_BINS
+            # Smooth the histogram
+            for _ in range(6):
+                hist = (np.roll(hist, 1) + hist + np.roll(hist, -1)) / 3
+                
+            # Find peaks in histogram
+            max_mag = np.max(hist)
+            for bin in range(self.NUM_BINS):
+                if hist[bin] < max_mag * self.PEAK_RATIO:
+                    continue
+                    
+                # Quadratic interpolation for peak position
+                left = hist[(bin - 1) % self.NUM_BINS]
+                center = hist[bin]
+                right = hist[(bin + 1) % self.NUM_BINS]
+                peak_offset = 0.5 * (left - right) / (left - 2*center + right)
+                ori = (bin + peak_offset) * (360 / self.NUM_BINS)
+                
                 orientations.append({
-                    'x': x,
-                    'y': y,
+                    'x': kp['x'],
+                    'y': kp['y'],
                     'octave': kp['octave'],
-                    'scale': scale,
-                    'orientation': orientation
+                    'scale': kp['scale'],
+                    'orientation': ori % 360
                 })
                 
         return orientations
 
-    def build_descriptor(self, image, keypoints, dominant_orientations):
+    def build_descriptor(self, scale_space, keypoints, orientations):
         descriptors = []
-        height, width = image.shape
         
-        for kp in dominant_orientations:
-            x, y = kp['x'], kp['y']
-            orientation = kp['orientation']
+        for kp, ori in zip(keypoints, orientations):
+            octave = kp['octave']
+            scale = kp['scale']
+            x = int(round(kp['x'] / (2 ** octave)))
+            y = int(round(kp['y'] / (2 ** octave)))
+            angle = -np.deg2rad(ori['orientation'])
             
-            if (x < self.WINDOW_SIZE/2 or x > width - self.WINDOW_SIZE/2 or 
-                y < self.WINDOW_SIZE/2 or y > height - self.WINDOW_SIZE/2):
-                continue
+            gaussian_image = scale_space[octave][scale]
+            height, width = gaussian_image.shape
             
-            y_start = int(y - self.WINDOW_SIZE/2)
-            y_end = int(y + self.WINDOW_SIZE/2)
-            x_start = int(x - self.WINDOW_SIZE/2)
-            x_end = int(x + self.WINDOW_SIZE/2)
+            # Calculate gradients
+            dx = np.zeros((16, 16))
+            dy = np.zeros((16, 16))
+            mag = np.zeros((16, 16))
+            ori = np.zeros((16, 16))
             
-            window = image[y_start:y_end, x_start:x_end]
-            dy = cv2.Sobel(window, cv2.CV_32F, 0, 1, ksize=3)
-            dx = cv2.Sobel(window, cv2.CV_32F, 1, 0, ksize=3)
-            
-            magnitudes = np.sqrt(dx**2 + dy**2)
-            orientations = (np.degrees(np.arctan2(dy, dx)) - orientation) % 360
-            
-            descriptor = np.zeros((self.NUM_REGIONS * self.NUM_REGIONS * self.NUM_BINS))
-            
-            for i in range(self.NUM_REGIONS):
-                for j in range(self.NUM_REGIONS):
-                    region_y = i * self.REGION_SIZE
-                    region_x = j * self.REGION_SIZE
-                    region_mags = magnitudes[region_y:region_y+self.REGION_SIZE, region_x:region_x+self.REGION_SIZE]
-                    region_oris = orientations[region_y:region_y+self.REGION_SIZE, region_x:region_x+self.REGION_SIZE]
+            for i in range(-8, 8):
+                for j in range(-8, 8):
+                    if y + i < 1 or y + i >= height - 1 or x + j < 1 or x + j >= width - 1:
+                        continue
+                        
+                    dx_val = gaussian_image[y+i, x+j+1] - gaussian_image[y+i, x+j-1]
+                    dy_val = gaussian_image[y+i-1, x+j] - gaussian_image[y+i+1, x+j]
+                    mag_val = sqrt(dx_val*dx_val + dy_val*dy_val)
+                    ori_val = (np.rad2deg(np.arctan2(dy_val, dx_val)) - angle) % 360
                     
-                    bin_indices = (region_oris * self.NUM_BINS / 360).astype(int)
-                    hist = np.bincount(bin_indices.ravel(), weights=region_mags.ravel(), minlength=self.NUM_BINS)
+                    dx[i+8, j+8] = dx_val
+                    dy[i+8, j+8] = dy_val
+                    mag[i+8, j+8] = mag_val
+                    ori[i+8, j+8] = ori_val
+            
+            # Create descriptor
+            descriptor = np.zeros(128)  # 4x4 regions, 8 bins each
+            hist_width = 4  # 16/4
+            
+            for i in range(4):
+                for j in range(4):
+                    hist = np.zeros(8)
                     
-                    descriptor[(i * self.NUM_REGIONS + j) * self.NUM_BINS:
-                              (i * self.NUM_REGIONS + j + 1) * self.NUM_BINS] = hist
+                    for ii in range(4):
+                        for jj in range(4):
+                            x_idx = i * 4 + ii
+                            y_idx = j * 4 + jj
+                            
+                            weight = exp(-((x_idx-7.5)**2 + (y_idx-7.5)**2) / (2 * (hist_width * 1.5)**2))
+                            bin = int(round(ori[x_idx, y_idx] * 8 / 360)) % 8
+                            hist[bin] += weight * mag[x_idx, y_idx]
+                    
+                    descriptor[(i*4 + j)*8 : (i*4 + j)*8 + 8] = hist
             
-            norm = np.linalg.norm(descriptor)
-            if norm > 0:
-                descriptor = descriptor / norm
+            # Normalize descriptor
+            descriptor = descriptor / norm(descriptor)
+            descriptor = np.clip(descriptor, 0, 0.2)  # Clip large values
+            descriptor = descriptor / norm(descriptor)  # Renormalize
             
-            descriptor[descriptor > 0.2] = 0.2
+            descriptors.append(descriptor)
             
-            norm = np.linalg.norm(descriptor)
-            if norm > 0:
-                descriptor = descriptor / norm
-            
-            descriptors.append({
-                'x': x,
-                'y': y,
-                'descriptor': descriptor,
-                'orientation': orientation,
-                'scale': kp['scale'],
-                'octave': kp['octave']
-            })
-            
-        return descriptors
-    
-
-    def getDescriptor(self, image):
-        result = self.calculate_sift(image)
-        return (result['Keypoint'],  result['descriptors'])
-    
-
-    def detectEdges(self, gray):
-        rows, cols = gray.shape
-
-        ft_components = np.fft.fft2(gray)
-        ft_components = np.fft.fftshift(ft_components)
-
-        Kx = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])  # Sobel X
-        Ky = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])  # Sobel Y
-
-        Kx_padded = np.zeros_like(gray)
-        Ky_padded = np.zeros_like(gray)
-
-        kh, kw = Kx.shape
-        Kx_padded[:kh, :kw] = Kx
-        Ky_padded[:kh, :kw] = Ky
-
-        Kx_fft = np.fft.fft2(Kx_padded, s=gray.shape)
-        Ky_fft = np.fft.fft2(Ky_padded, s=gray.shape)
-
-        Kx_fft = np.fft.fftshift(Kx_fft)
-        Ky_fft = np.fft.fftshift(Ky_fft)
-
-        Gx_fft = ft_components * Kx_fft
-        Gy_fft = ft_components * Ky_fft
-
-        x_edge_image = np.fft.ifft2(Gx_fft).real
-        y_edge_image = np.fft.ifft2(Gy_fft).real
-        filtered_image = np.sqrt(x_edge_image**2 + y_edge_image**2)
-
-        x_edge_image = cv2.normalize(np.abs(x_edge_image), None, 0, 255, cv2.NORM_MINMAX)
-        y_edge_image = cv2.normalize(np.abs(y_edge_image), None, 0, 255, cv2.NORM_MINMAX)
-        filtered_image = cv2.normalize(np.sqrt(x_edge_image**2 + y_edge_image**2), None, 0, 255, cv2.NORM_MINMAX)
-
-        return filtered_image
+        return np.array(descriptors, dtype=np.float32)
