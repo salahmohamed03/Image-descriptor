@@ -12,8 +12,8 @@ Keypoint = namedtuple('Keypoint', ['x', 'y', 'octave', 'scale', 'value'])
 
 class SIFTProcessor:
     def __init__(self):
-        self.NUM_OCTAVES = 4
-        self.NUM_SCALES = 4
+        self.NUM_OCTAVES = 8
+        self.NUM_SCALES = 10
         self.INITIAL_SIGMA = 1.6
         self.NUM_BINS = 8
         self.NUM_REGIONS = 4
@@ -35,7 +35,7 @@ class SIFTProcessor:
     def apply(self, image):
         print("SIFT STARTED")
         start = time.time()
-        
+       
         results = self.calculate_sift(image)
         result_image = results['image']
         
@@ -53,6 +53,9 @@ class SIFTProcessor:
         else:
             gray_image = image.copy().astype(np.float32)
             image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
+
+        edgy_image = self.detectEdges(gray_image)
+        gray_image = cv2.normalize(edgy_image, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
 
         scale_space = self.scale_space_construction(gray_image)
         print(f"Scale Space Construction Done - {len(scale_space)} octaves")
@@ -82,22 +85,13 @@ class SIFTProcessor:
         }
         
     def draw_keypoints(self, image, keypoints, orientations):
-        orientation_map = {(ori['x'], ori['y']): ori for ori in orientations}
-        
         for kp in keypoints:
             x, y = int(round(kp['x'])), int(round(kp['y']))
             
+            # Draw a small white highlight circle (radius=3, thickness=-1 for filled)
             if 0 <= x < image.shape[1] and 0 <= y < image.shape[0]:
-                # Draw white circle for keypoint (BGR color: 255,255,255)
-                cv2.circle(image, (x, y), 3, (255, 255, 255), -1)
+                cv2.circle(image, (x, y), 1, (255, 255, 255), -1)  # White filled circle
                 
-                if (x, y) in orientation_map:
-                    ori = orientation_map[(x, y)]
-                    angle = ori['orientation']
-                    end_x = int(x + 20 * np.cos(np.radians(angle)))
-                    end_y = int(y + 20 * np.sin(np.radians(angle)))
-                    cv2.line(image, (x, y), (end_x, end_y), (255, 0, 0), 2)
-
     def scale_space_construction(self, image):
         scale_space = []
         copy_image = image.copy()
@@ -150,7 +144,7 @@ class SIFTProcessor:
         keypoints = []
         height, width = current_DOG.shape
         # Lower threshold to detect more keypoints
-        threshold = 0.1  # Reduced from 0.032 (0.8*0.04)
+        threshold = 0.05  # Reduced from 0.032 (0.8*0.04)
         
         for i in range(1, height - 1):
             for j in range(1, width - 1):
@@ -337,3 +331,39 @@ class SIFTProcessor:
     def getDescriptor(self, image):
         result = self.calculate_sift(image)
         return (result['Keypoint'],  result['descriptors'])
+    
+
+    def detectEdges(self, gray):
+        rows, cols = gray.shape
+
+        ft_components = np.fft.fft2(gray)
+        ft_components = np.fft.fftshift(ft_components)
+
+        Kx = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])  # Sobel X
+        Ky = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])  # Sobel Y
+
+        Kx_padded = np.zeros_like(gray)
+        Ky_padded = np.zeros_like(gray)
+
+        kh, kw = Kx.shape
+        Kx_padded[:kh, :kw] = Kx
+        Ky_padded[:kh, :kw] = Ky
+
+        Kx_fft = np.fft.fft2(Kx_padded, s=gray.shape)
+        Ky_fft = np.fft.fft2(Ky_padded, s=gray.shape)
+
+        Kx_fft = np.fft.fftshift(Kx_fft)
+        Ky_fft = np.fft.fftshift(Ky_fft)
+
+        Gx_fft = ft_components * Kx_fft
+        Gy_fft = ft_components * Ky_fft
+
+        x_edge_image = np.fft.ifft2(Gx_fft).real
+        y_edge_image = np.fft.ifft2(Gy_fft).real
+        filtered_image = np.sqrt(x_edge_image**2 + y_edge_image**2)
+
+        x_edge_image = cv2.normalize(np.abs(x_edge_image), None, 0, 255, cv2.NORM_MINMAX)
+        y_edge_image = cv2.normalize(np.abs(y_edge_image), None, 0, 255, cv2.NORM_MINMAX)
+        filtered_image = cv2.normalize(np.sqrt(x_edge_image**2 + y_edge_image**2), None, 0, 255, cv2.NORM_MINMAX)
+
+        return filtered_image
