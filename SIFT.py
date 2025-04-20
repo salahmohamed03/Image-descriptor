@@ -12,8 +12,8 @@ Keypoint = namedtuple('Keypoint', ['x', 'y', 'octave', 'scale', 'value'])
 
 class SIFTProcessor:
     def __init__(self):
-        self.NUM_OCTAVES = 6
-        self.NUM_SCALES = 8
+        self.NUM_OCTAVES = 4
+        self.NUM_SCALES = 4
         self.INITIAL_SIGMA = 1.6
         self.NUM_BINS = 8
         self.NUM_REGIONS = 4
