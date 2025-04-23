@@ -148,6 +148,7 @@ class MainWindowUI(QMainWindow):
     
     def on_sift_complete(self, result_image, computation_time):
         self.display_image(result_image, self.ui.SiftOutput)
+        self.ui.SIFTTime.display(computation_time)
     
     # Utility methods
     def display_image(self, image, label):
