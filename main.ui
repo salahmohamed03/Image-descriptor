@@ -1350,7 +1350,7 @@ TalkingUI &gt; QFrame {
             </widget>
            </item>
            <item>
-            <widget class="QLCDNumber" name="SIFTTime_2"/>
+            <widget class="QLCDNumber" name="SIFTTime"/>
            </item>
           </layout>
          </widget>

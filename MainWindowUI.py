@@ -66,7 +66,7 @@ class MainWindowUI(QMainWindow):
                 # Display image
                 self.display_image(self.corner_image, self.ui.CornerImage)
                 # Publish event
-                pub.sendMessage(Topics.LOAD_CORNER_IMAGE, image_path=file_path, image=self.corner_image)
+                # pub.sendMessage(Topics.LOAD_CORNER_IMAGE, image_path=file_path, image=self.corner_image)
                 logging.info(f"Loaded corner image: {file_path}")
             except Exception as e:
                 logging.error(f"Error loading corner image: {str(e)}")
@@ -94,7 +94,7 @@ class MainWindowUI(QMainWindow):
             try:
                 self.matching_image1 = cv2.imread(file_path)
                 self.display_image(self.matching_image1, self.ui.MatchingImage1)
-                pub.sendMessage(Topics.LOAD_MATCHING_IMAGE1, image_path=file_path, image=self.matching_image1)
+                # pub.sendMessage(Topics.LOAD_MATCHING_IMAGE1, image_path=file_path, image=self.matching_image1)
                 logging.info(f"Loaded matching image 1: {file_path}")
             except Exception as e:
                 logging.error(f"Error loading matching image 1: {str(e)}")
@@ -105,7 +105,7 @@ class MainWindowUI(QMainWindow):
             try:
                 self.matching_image2 = cv2.imread(file_path)
                 self.display_image(self.matching_image2, self.ui.MatchingImage2)
-                pub.sendMessage(Topics.LOAD_MATCHING_IMAGE2, image_path=file_path, image=self.matching_image2)
+                # pub.sendMessage(Topics.LOAD_MATCHING_IMAGE2, image_path=file_path, image=self.matching_image2)
                 logging.info(f"Loaded matching image 2: {file_path}")
             except Exception as e:
                 logging.error(f"Error loading matching image 2: {str(e)}")
@@ -140,10 +140,7 @@ class MainWindowUI(QMainWindow):
     
     def apply_sift(self):
         if self.sift_image is not None :
-            pub.sendMessage(
-                Topics.APPLY_SIFT,
-                image=self.sift_image,
-            )
+            pub.sendMessage(Topics.APPLY_SIFT,image=self.sift_image)
             logging.info("Applied SIFT")
     
     def on_sift_complete(self, result_image, computation_time):
