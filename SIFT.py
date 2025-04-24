@@ -79,9 +79,8 @@ class SIFTProcessor:
 
         return {
             "image": image,
-            "scale_space": self.sift.scale_space,  # Access the built scale space
+            "scale_space": self.sift.scale_space, 
             "keypoints": keypoint_dicts,
-            "DOG_pyramids": [],  # Not directly available
             "dominant_orientations": dominant_orientations,
             "descriptors": descriptors
         }
@@ -90,52 +89,32 @@ class SIFTProcessor:
         for kp in keypoints:
             x, y = int(round(kp['x'])), int(round(kp['y']))
             
-            # Draw a small white highlight circle (radius=3, thickness=-1 for filled)
             if 0 <= x < image.shape[1] and 0 <= y < image.shape[0]:
-                cv2.circle(image, (x, y), 2, (255, 255, 255), -1)  # White filled circle
+                cv2.circle(image, (x, y), 2, (255, 255, 255), -1)  
 
-# The provided SIFT implementation (unchanged)
 class SIFT:
     def __init__(self, sigma=1.6, s=3, num_octaves=4):
-        """
-         Initialize SIFT parameters.
-         
-         Parameters:
-         - sigma (float): Base sigma for Gaussian blur (default: 1.6)
-         - s (int): Number of intervals & differences of gaussian per octave (default: 3)
-         - num_octaves (int): Number of octaves (default: 4)
-         """
         self.sigma = sigma
-        self.s = s # Number of intervals & differences of gaussian per octave
-        self.k = 2 ** (1.0 / s) # Scale factor between levels
-        self.num_levels = s + 3 # Number of blur levels per octave (s + 3 for DoG)
+        self.s = s 
+        self.k = 2 ** (1.0 / s) 
+        self.num_levels = s + 3 
         self.num_octaves = num_octaves
-        self.scale_space = None # To store the Gaussian scale space
+        self.scale_space = None 
 
     def build_scale_space(self, image):
-        """
-         Construct the Gaussian scale space for the input image using cv2.GaussianBlur.
-         
-         Parameters:
-         - image (ndarray): Grayscale input image as a 2D NumPy array
-         """
         image = image.astype(np.float32)
         self.scale_space = []
 
         for i in range(self.num_octaves):
             
-            # if 1st octave:
-            # base_image for current octave is the original inputted image
             if i == 0:
                 base_image = image
 
-            # otherwise, base_image for current octave is:
             else:
-                base_image = self.scale_space[i-1][self.s][::2, ::2] # previous octave (i-1), last level (s) in it, downsample the that image by taking every second pixel in both dimensions (reducing the resolution by half).
+                base_image = self.scale_space[i-1][self.s][::2, ::2] 
 
             octave = []
 
-            # produce the different blurring levels (images) of the current octave
             for level in range(self.num_levels):
 
                 sigma_of_this_level = self.sigma * (self.k ** level)
@@ -145,43 +124,32 @@ class SIFT:
                 if gaussian_kernel_size % 2 == 0:
                     gaussian_kernel_size += 1
 
-                '''
-                This line generates a blurred version of the base_image at a specific scale (sigma_of_this_level) using a Gaussian kernel of size gaussian_kernel_size. The sigmaX and sigmaY parameters define the standard deviation of the Gaussian blur in the X and Y directions and ensure isotropic blurring (equal blur in all directions).
-                '''
                 blurred_image = cv2.GaussianBlur(base_image, (gaussian_kernel_size, gaussian_kernel_size), sigmaX = sigma_of_this_level, sigmaY = sigma_of_this_level)
 
-                octave.append(blurred_image) # add the produced blurred image at current level to the current octave
+                octave.append(blurred_image) 
 
             self.scale_space.append(octave)
 
+
     def detect_extrema(self):
-        """
-         Detect scale space extrema in the Difference of Gaussians (DoG).
-         
-         Returns:
-         - extrema (list): List of tuples (octave, level, x, y) representing extrema locations
-         """
         if self.scale_space is None:
             raise ValueError("Scale space has not been constructed. Call build_scale_space first.")
         
         DoG = []
 
-        # 1. get difference of gaussian
         for octave_index in range(self.num_octaves):
 
             octave_DoG = []
             
             for level in range(self.num_levels - 1):
                 dog = self.scale_space[octave_index][level + 1] - self.scale_space[octave_index][level]
-                octave_DoG.append(dog) # append dog between current level and the next level
+                octave_DoG.append(dog)
 
-            DoG.append(octave_DoG) # append the full DoG for the current octave
+            DoG.append(octave_DoG)
 
         extrema = []
 
-        # 2. get extrema: compare each DoG pixel with its 26 neighbors
         for octave_index in range(self.num_octaves):
-
             for level in range(1, self.num_levels - 2):
 
                 dog_prev = DoG[octave_index][level - 1]
@@ -209,24 +177,11 @@ class SIFT:
                             
         return extrema
 
+
     def localize_keypoints(self, extrema, contrast_threshold=0.03, edge_threshold=10):
-        """
-         Refine extrema into keypoints with sub-pixel accuracy and filter out unstable ones.
-         
-         Parameters:
-         - extrema (list): List of (octave, level, x, y) from detect_extrema
-         - contrast_threshold (float): Minimum DoG magnitude (default: 0.03)
-         - edge_threshold (float): 
-                - is a parameter used to filter out unstable keypoints that lie on edges.
-                - It helps eliminate keypoints with high edge responses by analyzing the curvature of the Difference of Gaussians (DoG) using the Hessian matrix. 
-                - If the ratio of principal curvatures (trace²/det) exceeds the edge_threshold, 
-                - the keypoint is discarded as it is likely to be on an edge rather than a corner.
-         
-         Returns:
-         - keypoints (list): List of (x, y, sigma) in ORIGINAL IMAGE coordinates
-         """
+        
         keypoints = []
-        DoG_pyramid = [] # Precompute DoG for all octaves
+        DoG_pyramid = []
         for o in range(self.num_octaves):
             octave_DoG = []
             for m in range(self.num_levels - 1):
@@ -236,23 +191,18 @@ class SIFT:
 
         for (octave, level, x, y) in extrema:
 
-            # Get 3x3x3 DoG neighborhood
             dog_prev = DoG_pyramid[octave][level - 1]
             dog_curr = DoG_pyramid[octave][level]
             dog_next = DoG_pyramid[octave][level + 1]
 
-            # Check bounds (skip if too close to edge)
             if x < 1 or y < 1 or x >= dog_curr.shape[1] - 1 or y >= dog_curr.shape[0] - 1:
                 continue
 
-            # Sub-pixel refinement
-            # First derivatives
             Dx = (dog_curr[y, x+1] - dog_curr[y, x-1]) / 2.0
             Dy = (dog_curr[y+1, x] - dog_curr[y-1, x]) / 2.0
             Ds = (dog_next[y, x] - dog_prev[y, x]) / 2.0
             gradient = np.array([Dx, Dy, Ds])
 
-            # Second derivatives
             Dxx = dog_curr[y, x+1] - 2 * dog_curr[y, x] + dog_curr[y, x-1]
             Dyy = dog_curr[y+1, x] - 2 * dog_curr[y, x] + dog_curr[y-1, x]
             Dss = dog_next[y, x] - 2 * dog_curr[y, x] + dog_prev[y, x]
@@ -266,27 +216,22 @@ class SIFT:
                 [Dxs, Dys, Dss]
             ])
 
-            # Solve for offset: x̂ = -H⁻¹ * ∇D
             try:
                 offset = -np.linalg.inv(hessian).dot(gradient)
             except np.linalg.LinAlgError:
-                continue # Skip if Hessian is singular
+                continue 
 
-            # Check if offset is too large (unstable)
             if np.any(np.abs(offset) > 0.5):
-                continue # Could iterate here, but we'll skip for simplicity
+                continue
 
-            # Refined position
             x_refined = x + offset[0]
             y_refined = y + offset[1]
             m_refined = level + offset[2]
 
-            # Compute refined DoG value for contrast check
             D_refined = dog_curr[y, x] + 0.5 * gradient.dot(offset)
             if abs(D_refined) < contrast_threshold:
                 continue # Low contrast, discard
 
-            # Edge response elimination (2D Hessian at current level)
             H_2d = np.array([[Dxx, Dxy], [Dxy, Dyy]])
             trace = Dxx + Dyy
             det = Dxx * Dyy - Dxy ** 2
@@ -303,13 +248,13 @@ class SIFT:
             keypoints.append(kp)
         return keypoints
 
+
     def assign_orientations(self, keypoints, image):
 
         oriented_keypoints = []
 
         for key_point in keypoints:
 
-            # x & y position of current key point
             x, y = int(key_point.pt[0]), int(key_point.pt[1])
 
             sigma = key_point.size / 2
@@ -320,17 +265,15 @@ class SIFT:
                 y - radius < 0 or y + radius >= image.shape[0]):
                 continue
 
-            patch = image[y-radius : y+radius+1, x-radius : x+radius+1] # from the original image
+            patch = image[y-radius : y+radius+1, x-radius : x+radius+1]
 
             dx = cv2.Sobel(patch, cv2.CV_32F, 1, 0, ksize=3)
             dy = cv2.Sobel(patch, cv2.CV_32F, 0, 1, ksize=3)
 
             magnitude = np.sqrt(dx**2 + dy**2)
 
-            # the orientation / direction
             direction = np.arctan2(dy, dx) * 180 / np.pi
 
-            # discretizing the orientations into 36 steps / levels
             direction = (direction + 360) % 360
 
             y_coords, x_coords = np.indices(patch.shape)
@@ -341,11 +284,11 @@ class SIFT:
 
             weights = magnitude * gaussian
 
-            hist = np.zeros(36) # hist: histogram of discretized BINS / directions
+            hist = np.zeros(36) 
             
             for i in range(patch.shape[0]):
                 for j in range(patch.shape[1]):
-                    bin_idx = int(direction[i, j] // 10) # bin: discretized orientation / direction
+                    bin_idx = int(direction[i, j] // 10)
                     hist[bin_idx] += weights[i, j]
 
             hist_smoothed = np.convolve(hist, [1, 1, 1], mode='same') / 3
@@ -360,6 +303,7 @@ class SIFT:
             oriented_keypoints.append(new_kp)
 
         return oriented_keypoints
+
 
     def compute_descriptors(self, keypoints, image):
         filtered_keypoints = []
